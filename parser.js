@@ -125,13 +125,13 @@ class Parser {
     console.log(`PROCESS: connect -> createPage -> open`.cyan)
 
     let i = 0
-    while (this.checkLoginPage) {
+    while (await this.checkLoginPage()) {
       console.log(`PROCESS: connect -> createPage -> open -> login x${++i}`.cyan)
       await this.login()
       await this.sleep(10)
     }
 
-    if (this.checkAccountPage) {
+    if (await this.checkAccountPage()) {
       console.log(`PROCESS: connect -> createPage -> open -> login x${++i} -> parse`.cyan)
       await this.parse()
     }
