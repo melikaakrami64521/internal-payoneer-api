@@ -1,23 +1,29 @@
 require('colors')
+const fs = require('fs')
 const pup = require('puppeteer')
 
 class Parser {
   constructor(config) {
     this.browser = null
     this.page = null
+    this.urlLogin = 'https://login.payoneer.com'
+    this.urlAccount = 'https://myaccount.payoneer.com'
+    this.urlAccountHome = 'https://myaccount.payoneer.com/ma/'
+    this.chromePath = null
+    this.chromePaths = [
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    ]
 
     this.config = config || {}
-    this.username = null
-    this.password = null
   }
 
   async connect() {
-    const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    this.findChromePath()
     this.browser = await pup.launch({
-      executablePath: chromePath,
+      executablePath: this.chromePath,
       args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       headless: false,
-      // userDataDir: './.cache',
       ignoreDefaultArgs: ['--enable-automation'],
       devtools: true,
       ignoreHTTPSErrors: true,
@@ -35,31 +41,33 @@ class Parser {
   async createPage() {
     let [page, ...otherPages] = await this.browser.pages()
     this.page = page
-    // emulate mobile device
-    // const device = pup.KnownDevices['iPhone XR']
-    // await this.page.emulate(device)
   }
 
   async open() {
-    const url = 'https://myaccount.payoneer.com/ma/'
-    await this.page.goto(url, { waitUntil: 'networkidle0' })
+    await this.page.goto(this.urlAccount, { waitUntil: 'networkidle0' })
+    await this.sleep(10)
+  }
+
+  async getCurrentURL() {
+    // const url = await this.page.evaluate(() => document.location.href)
+    const url = await this.page.url()
+    console.log(url.yellow)
+    return url
   }
 
   async checkLoginPage() {
-    const loginUrl = 'https://login.payoneer.com/'
-    return (await this.page.url()).includes(loginUrl)
+    const url = await this.getCurrentURL()
+    return url.includes(this.urlLogin)
   }
 
   async checkAccountPage() {
-    const accountUrl = 'https://myaccount.payoneer.com/'
-    return (await this.page.url()).includes(accountUrl)
+    const url = await this.getCurrentURL()
+    return url.includes(this.urlAccount)
   }
 
   async login() {
     // ? CHECK IF THIS IS LOGIN PAGE
     if (!this.checkLoginPage()) return
-
-    // ! *only for testing*
 
     const formSelector = '.logInForm > form'
     await this.page.waitForSelector(formSelector)
@@ -71,25 +79,23 @@ class Parser {
 
     // ? INPUT DATA
     // username
-    await inputUsername.press('Backspace')
     await inputUsername.click()
+    await inputUsername.press('Backspace')
     await inputUsername.type(this.username)
-    await this.sleep(5)
+    await this.sleep(2)
     // password
-    await inputPassword.press('Backspace')
     await inputPassword.click()
+    await inputPassword.press('Backspace')
     await inputPassword.type(this.password)
-    await this.sleep(5)
+    await this.sleep(2)
     // submit
     await this.sleep(10)
     await buttonSubmit.click()
-
-    await this.sleep(30)
   }
 
   async parse() {
     // ? OPEN HOME PAGE
-    await this.page.goto('https://myaccount.payoneer.com/ma/', { waitUntil: 'networkidle0' })
+    await this.page.goto(this.urlAccountHome, { waitUntil: 'networkidle0' })
     const balancesSelector = 'div.balances-cards-list-wrapper'
     const transactionsSelector = 'div.widget-template.transactions-widget'
     const detailsSelector = 'div.myaccount-layout__right-pane > div.user-details'
@@ -110,26 +116,40 @@ class Parser {
     await this.sleep(600)
   }
 
-  async refresh() {
+  async testing() {
     await this.connect()
+    console.log(`PROCESS: connect`.cyan)
     await this.createPage()
+    console.log(`PROCESS: connect -> createPage`.cyan)
     await this.open()
-    console.log('PROCESS: connect -> createPage -> open')
+    console.log(`PROCESS: connect -> createPage -> open`.cyan)
 
     let i = 0
     while (this.checkLoginPage) {
-      console.log(`PROCESS: ... -> login x${i}`)
+      console.log(`PROCESS: connect -> createPage -> open -> login x${++i}`.cyan)
       await this.login()
       await this.sleep(10)
     }
 
     if (this.checkAccountPage) {
-      console.log('PROCESS: ... -> parse')
+      console.log(`PROCESS: connect -> createPage -> open -> login x${++i} -> parse`.cyan)
       await this.parse()
     }
 
     await this.disconnect()
-    console.log('PROCESS: ... -> disconnect')
+    console.log(`PROCESS: connect -> createPage -> open -> login x${++i} -> parse -> disconnect`.cyan)
+  }
+
+  findChromePath() {
+    for (let path of this.chromePaths) {
+      if (fs.existsSync(path)) {
+        this.chromePath = path
+        return
+      }
+    }
+
+    console.log('CHROME NOT FOUND'.red)
+    process.exit(1)
   }
 
   sleep(s) {
@@ -140,7 +160,7 @@ class Parser {
 async function main() {
   try {
     const parser = new Parser()
-    await parser.refresh()
+    await parser.testing()
   } catch (e) {
     console.log(e?.message?.cyan)
   }
