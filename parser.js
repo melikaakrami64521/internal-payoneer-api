@@ -17,7 +17,7 @@ class Parser {
       executablePath: chromePath,
       args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       headless: false,
-      userDataDir: './.cache',
+      // userDataDir: './.cache',
       ignoreDefaultArgs: ['--enable-automation'],
       devtools: true,
       ignoreHTTPSErrors: true,
@@ -76,7 +76,7 @@ class Parser {
   }
 
   async parse() {
-    this.sleep(60)
+    this.sleep(30)
     // ? OPEN HOME PAGE
     await this.page.goto('https://myaccount.payoneer.com/ma/', { waitUntil: 'networkidle0' })
     const balancesSelector = 'div.balances-cards-list-wrapper'
