@@ -40,13 +40,25 @@ class Parser {
     // await this.page.emulate(device)
   }
 
-  async open(url) {
-    url = url ?? 'https://login.payoneer.com/'
-    console.log(url)
+  async open() {
+    url = 'https://myaccount.payoneer.com/ma/'
     await this.page.goto(url, { waitUntil: 'networkidle0' })
   }
 
+  async checkLoginPage() {
+    const loginUrl = 'https://login.payoneer.com/'
+    return (await this.page.url()).includes(loginUrl)
+  }
+
+  async checkAccountPage() {
+    const accountUrl = 'https://myaccount.payoneer.com/'
+    return (await this.page.url()).includes(accountUrl)
+  }
+
   async login() {
+    // ? CHECK IF THIS IS LOGIN PAGE
+    if (!this.checkLoginPage()) return
+
     // ! *only for testing*
 
     const formSelector = '.logInForm > form'
@@ -72,11 +84,10 @@ class Parser {
     await this.sleep(10)
     await buttonSubmit.click()
 
-    // TODO: check if all done
+    await this.sleep(30)
   }
 
   async parse() {
-    this.sleep(30)
     // ? OPEN HOME PAGE
     await this.page.goto('https://myaccount.payoneer.com/ma/', { waitUntil: 'networkidle0' })
     const balancesSelector = 'div.balances-cards-list-wrapper'
@@ -99,6 +110,28 @@ class Parser {
     await this.sleep(600)
   }
 
+  async refresh() {
+    await this.connect()
+    await this.createPage()
+    await this.open()
+    console.log('PROCESS: connect -> createPage -> open')
+
+    let i = 0
+    while (this.checkLoginPage) {
+      console.log(`PROCESS: ... -> login x${i}`)
+      await this.login()
+      await this.sleep(10)
+    }
+
+    if (this.checkAccountPage) {
+      console.log('PROCESS: ... -> parse')
+      await this.parse()
+    }
+
+    await this.disconnect()
+    console.log('PROCESS: ... -> disconnect')
+  }
+
   sleep(s) {
     return new Promise(r => setTimeout(r, s * 1_000))
   }
@@ -107,12 +140,7 @@ class Parser {
 async function main() {
   try {
     const parser = new Parser()
-    await parser.connect()
-    await parser.createPage()
-    await parser.open()
-    await parser.login()
-    await parser.parse()
-    await parser.disconnect()
+    await parser.refresh()
   } catch (e) {
     console.log(e?.message?.cyan)
   }
