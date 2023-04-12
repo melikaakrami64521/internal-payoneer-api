@@ -12,9 +12,9 @@ class Parser {
   }
 
   async connect() {
-    // const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+    const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
     this.browser = await pup.launch({
-      // executablePath: chromePath,
+      executablePath: chromePath,
       args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       headless: false,
       userDataDir: './.cache',
@@ -48,6 +48,8 @@ class Parser {
 
   async login() {
     // ! *only for testing*
+    this.username = ''
+    this.password = ''
 
     const formSelector = '.logInForm > form'
     await this.page.waitForSelector(formSelector)
