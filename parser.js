@@ -41,7 +41,7 @@ class Parser {
   }
 
   async open() {
-    url = 'https://myaccount.payoneer.com/ma/'
+    const url = 'https://myaccount.payoneer.com/ma/'
     await this.page.goto(url, { waitUntil: 'networkidle0' })
   }
 
