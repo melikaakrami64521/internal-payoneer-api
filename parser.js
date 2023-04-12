@@ -69,13 +69,14 @@ class Parser {
     await inputPassword.type(this.password)
     await this.sleep(5)
     // submit
-    await this.sleep(60)
+    await this.sleep(10)
     await buttonSubmit.click()
 
     // TODO: check if all done
   }
 
   async parse() {
+    this.sleep(60)
     // ? OPEN HOME PAGE
     await this.page.goto('https://myaccount.payoneer.com/ma/', { waitUntil: 'networkidle0' })
     const balancesSelector = 'div.balances-cards-list-wrapper'
