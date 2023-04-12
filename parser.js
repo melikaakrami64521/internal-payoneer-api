@@ -48,8 +48,6 @@ class Parser {
 
   async login() {
     // ! *only for testing*
-    this.username = ''
-    this.password = ''
 
     const formSelector = '.logInForm > form'
     await this.page.waitForSelector(formSelector)
