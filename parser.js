@@ -96,21 +96,23 @@ class Parser {
   async parse() {
     // ? OPEN HOME PAGE
     await this.page.goto(this.urlAccountHome, { waitUntil: 'networkidle0' })
+    console.log('loaded (or not)'.gray)
     const balancesSelector = 'div.balances-cards-list-wrapper'
     const transactionsSelector = 'div.widget-template.transactions-widget'
     const detailsSelector = 'div.myaccount-layout__right-pane > div.user-details'
     await this.page.waitForSelector(balancesSelector)
     await this.page.waitForSelector(transactionsSelector)
     await this.page.waitForSelector(detailsSelector)
+    console.log('all selector are loaded'.gray)
 
     // user details
-    const userDetails = await detailsSelector.eval('*', el => el.innerText)
+    const userDetails = await this.page.$(detailsSelector).eval('*', el => el.innerText)
     console.log(userDetails)
     // balances
-    const balance = await balancesSelector.eval('*', el => el.innerText)
+    const balance = await this.page.$(balancesSelector).eval('*', el => el.innerText)
     console.log(balance)
     // transactions
-    const transactions = await transactionsSelector.eval('*', el => el.innerText)
+    const transactions = await this.page.$(transactionsSelector).eval('*', el => el.innerText)
     console.log(transactions)
 
     await this.sleep(600)
@@ -132,12 +134,12 @@ class Parser {
     }
 
     if (await this.checkAccountPage()) {
-      console.log(`PROCESS: connect -> createPage -> open -> login x${++i} -> parse`.cyan)
+      console.log(`PROCESS: connect -> createPage -> open -> login x${i} -> parse`.cyan)
       await this.parse()
     }
 
     await this.disconnect()
-    console.log(`PROCESS: connect -> createPage -> open -> login x${++i} -> parse -> disconnect`.cyan)
+    console.log(`PROCESS: connect -> createPage -> open -> login x${i} -> parse -> disconnect`.cyan)
   }
 
   findChromePath() {
