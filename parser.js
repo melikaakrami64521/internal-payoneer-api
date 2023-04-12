@@ -95,7 +95,7 @@ class Parser {
     const transactions = await transactionsSelector.eval('*', el => el.innerText)
     console.log(transactions)
 
-    await this.sleep(60)
+    await this.sleep(600)
   }
 
   sleep(s) {
@@ -110,7 +110,7 @@ async function main() {
     await parser.createPage()
     await parser.open()
     await parser.login()
-    // await parser.parse()
+    await parser.parse()
     await parser.disconnect()
   } catch (e) {
     console.log(e?.message?.cyan)
