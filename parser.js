@@ -15,6 +15,8 @@ class Parser {
       'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     ]
 
+    this.data = null
+
     this.config = config || {}
   }
 
@@ -106,20 +108,22 @@ class Parser {
     await this.page.waitForSelector(detailsSelector)
     console.log('all selector are loaded'.gray)
 
-    await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
-    // user details
+    // elements
     const userDetailsEl = await this.page.$(detailsSelector)
+    const balanceEl = await this.page.$(balancesSelector)
+    const transactionsEl = await this.page.$(transactionsSelector)
+    // screenshots
+    await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
     await userDetailsEl.screenshot({ path: 'userdetails.png' })
-    // const userDetails = await (await userDetailsEl.getProperty('textContent')).jsonValue()
+    await balanceEl.screenshot({ path: 'balance.png' })
+    await transactionsEl.screenshot({ path: 'transactions.png' })
+    await this.sleep(2)
+    // data
     const userDetails = await userDetailsEl.evaluate(el => ({
       name: el.querySelector('div.user-name')?.innerText || null,
       id: el.querySelector('div.customer-id')?.innerText || null,
       lastLogin: el.querySelector('div.last-login')?.innerText || null,
     }))
-    // balances
-    const balanceEl = await this.page.$(balancesSelector)
-    await balanceEl.screenshot({ path: 'balance.png' })
-    // const balance = await(await balanceEl.getProperty('textContent')).jsonValue()
     const balance = await balanceEl.$$eval('div.balance-card', cards =>
       cards
         .map(card => {
@@ -130,14 +134,11 @@ class Parser {
           const amountCurrencyArr = content.split(' ')
           return amountCurrencyArr
         })
-        .reduce((res, [amount, currency]) => ({ ...res, [currency]: amount }), {})
+        ?.reduce((res, [amount, currency]) => ({ ...res, [currency]: amount }), {})
     )
-    // transactions
-    const transactionsEl = await this.page.$(transactionsSelector)
-    await transactionsEl.screenshot({ path: 'transactions.png' })
     const transactions = await (await transactionsEl.getProperty('textContent')).jsonValue()
 
-    return {
+    this.data = {
       user: userDetails,
       balances: balance,
       transactions,
@@ -161,9 +162,10 @@ class Parser {
 
     if (await this.checkAccountPage()) {
       console.log(`PROCESS: connect -> createPage -> open -> login x${i} -> parse`.cyan)
-      const data = await this.parse()
-      console.log(data)
+      await this.parse()
     }
+
+    console.log(this.data)
 
     await this.sleep(10)
     await this.disconnect()
