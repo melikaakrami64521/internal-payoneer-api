@@ -18,6 +18,7 @@ class Parser {
     this.data = null
 
     this.config = config || {}
+
   }
 
   async connect() {
@@ -113,11 +114,11 @@ class Parser {
     const balanceEl = await this.page.$(balancesSelector)
     const transactionsEl = await this.page.$(transactionsSelector)
     // screenshots
-    await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
-    await userDetailsEl.screenshot({ path: 'userdetails.png' })
-    await balanceEl.screenshot({ path: 'balance.png' })
-    await transactionsEl.screenshot({ path: 'transactions.png' })
-    await this.sleep(2)
+    // await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
+    // await userDetailsEl.screenshot({ path: 'userdetails.png' })
+    // await balanceEl.screenshot({ path: 'balance.png' })
+    // await transactionsEl.screenshot({ path: 'transactions.png' })
+    // await this.sleep(2)
     // data
     const userDetails = await userDetailsEl.evaluate(el => ({
       name: el.querySelector('div.user-name')?.innerText || null,
