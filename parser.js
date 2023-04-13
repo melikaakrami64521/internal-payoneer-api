@@ -24,14 +24,14 @@ class Parser {
     this.findChromePath()
     this.browser = await pup.launch({
       executablePath: this.chromePath,
-      // args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       args: [
         '--start-maximized',
         '--disable-blink-features=AutomationControlled',
         '--disable-infobars',
-        '--window-position=0,0',
+
         // '--no-sandbox',
         // '--disable-extension',
+        // '--window-position=0,0',
         // '--enable-logging',
         // '--disable-setuid-sandbox',
         // '--disable-gpu',

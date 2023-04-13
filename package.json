@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:webpack": "webpack",
-    "start": "node main.js"
+    "start": "node main.js",
+    "exe": "pkg parser.js -t node16-win-x64 --public"
   },
   "keywords": [],
   "author": "melikaakrami64521",
