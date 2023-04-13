@@ -106,13 +106,16 @@ class Parser {
     console.log('all selector are loaded'.gray)
 
     // user details
-    const userDetails = await this.page.$(detailsSelector).eval('*', el => el.innerText)
+    const userDetailsEl = await this.page.$(detailsSelector)
+    const userDetails = await userDetailsEl.eval('*', el => el.innerText)
     console.log(userDetails)
     // balances
-    const balance = await this.page.$(balancesSelector).eval('*', el => el.innerText)
+    const balanceEl = await this.page.$(balancesSelector)
+    const balance = await balanceEl.eval('*', el => el.innerText)
     console.log(balance)
     // transactions
-    const transactions = await this.page.$(transactionsSelector).eval('*', el => el.innerText)
+    const transactionsEl = await this.page.$(transactionsSelector)
+    const transactions = await transactionsEl.eval('*', el => el.innerText)
     console.log(transactions)
 
     await this.sleep(600)
