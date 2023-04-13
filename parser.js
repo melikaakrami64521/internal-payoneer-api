@@ -18,14 +18,24 @@ class Parser {
     this.data = null
 
     this.config = config || {}
-
   }
 
   async connect() {
     this.findChromePath()
     this.browser = await pup.launch({
       executablePath: this.chromePath,
-      args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
+      // args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
+      args: [
+        '--start-maximized',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-infobars',
+        '--no-sandbox',
+        '--enable-logging',
+        '--disable-extension',
+        '--disable-setuid-sandbox',
+        '--window-position=0,0',
+        '--disable-gpu',
+      ],
       headless: false,
       ignoreDefaultArgs: ['--enable-automation'],
       //   userDataDir: './.pup',
@@ -114,17 +124,23 @@ class Parser {
     const balanceEl = await this.page.$(balancesSelector)
     const transactionsEl = await this.page.$(transactionsSelector)
     // screenshots
-    // await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
-    // await userDetailsEl.screenshot({ path: 'userdetails.png' })
-    // await balanceEl.screenshot({ path: 'balance.png' })
-    // await transactionsEl.screenshot({ path: 'transactions.png' })
-    // await this.sleep(2)
+    await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
+    await this.sleep(0.5)
+    await userDetailsEl.screenshot({ path: 'userdetails.png' })
+    await this.sleep(0.5)
+    await balanceEl.screenshot({ path: 'balance.png' })
+    await this.sleep(0.5)
+    await transactionsEl.screenshot({ path: 'transactions.png' })
+    await this.sleep(0.5)
     // data
     const userDetails = await userDetailsEl.evaluate(el => ({
       name: el.querySelector('div.user-name')?.innerText || null,
       id: el.querySelector('div.customer-id')?.innerText || null,
       lastLogin: el.querySelector('div.last-login')?.innerText || null,
     }))
+    console.log(userDetails)
+    await this.sleep(5)
+
     const balance = await balanceEl.$$eval('div.balance-card', cards =>
       cards
         .map(card => {
@@ -137,7 +153,11 @@ class Parser {
         })
         ?.reduce((res, [amount, currency]) => ({ ...res, [currency]: amount }), {})
     )
+    console.log(balance)
+    await this.sleep(5)
+
     const transactions = await (await transactionsEl.getProperty('textContent')).jsonValue()
+    console.log(transactions)
 
     this.data = {
       user: userDetails,
