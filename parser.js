@@ -25,6 +25,7 @@ class Parser {
       args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       headless: false,
       ignoreDefaultArgs: ['--enable-automation'],
+      //   userDataDir: './.pup',
       devtools: true,
       ignoreHTTPSErrors: true,
       defaultViewport: { width: 1920, height: 1080 },
@@ -97,28 +98,50 @@ class Parser {
     // ? OPEN HOME PAGE
     await this.page.goto(this.urlAccountHome, { waitUntil: 'networkidle0' })
     console.log('loaded (or not)'.gray)
-    const balancesSelector = 'div.balances-cards-list-wrapper'
-    const transactionsSelector = 'div.widget-template.transactions-widget'
+    const balancesSelector = 'div.balances-cards-list'
+    const transactionsSelector = 'div.transactions-content'
     const detailsSelector = 'div.myaccount-layout__right-pane > div.user-details'
     await this.page.waitForSelector(balancesSelector)
     await this.page.waitForSelector(transactionsSelector)
     await this.page.waitForSelector(detailsSelector)
     console.log('all selector are loaded'.gray)
 
+    await this.page.screenshot({ path: 'fullpage.png', fullPage: true })
     // user details
     const userDetailsEl = await this.page.$(detailsSelector)
-    const userDetails = await userDetailsEl.eval('*', el => el.innerText)
-    console.log(userDetails)
+    await userDetailsEl.screenshot({ path: 'userdetails.png' })
+    // const userDetails = await (await userDetailsEl.getProperty('textContent')).jsonValue()
+    const userDetails = await userDetailsEl.evaluate(el => ({
+      name: el.querySelector('div.user-name')?.innerText || null,
+      id: el.querySelector('div.customer-id')?.innerText || null,
+      lastLogin: el.querySelector('div.last-login')?.innerText || null,
+    }))
     // balances
     const balanceEl = await this.page.$(balancesSelector)
-    const balance = await balanceEl.eval('*', el => el.innerText)
-    console.log(balance)
+    await balanceEl.screenshot({ path: 'balance.png' })
+    // const balance = await(await balanceEl.getProperty('textContent')).jsonValue()
+    const balance = await balanceEl.$$eval('div.balance-card', cards =>
+      cards
+        .map(card => {
+          const content =
+            card.querySelector('div.balance-card__content > main.balance-card__main div.balance')?.innerText || null
+          if (!content) return
+
+          const amountCurrencyArr = content.split(' ')
+          return amountCurrencyArr
+        })
+        .reduce((res, [amount, currency]) => ({ ...res, [currency]: amount }), {})
+    )
     // transactions
     const transactionsEl = await this.page.$(transactionsSelector)
-    const transactions = await transactionsEl.eval('*', el => el.innerText)
-    console.log(transactions)
+    await transactionsEl.screenshot({ path: 'transactions.png' })
+    const transactions = await (await transactionsEl.getProperty('textContent')).jsonValue()
 
-    await this.sleep(600)
+    return {
+      user: userDetails,
+      balances: balance,
+      transactions,
+    }
   }
 
   async testing() {
@@ -138,9 +161,11 @@ class Parser {
 
     if (await this.checkAccountPage()) {
       console.log(`PROCESS: connect -> createPage -> open -> login x${i} -> parse`.cyan)
-      await this.parse()
+      const data = await this.parse()
+      console.log(data)
     }
 
+    await this.sleep(10)
     await this.disconnect()
     console.log(`PROCESS: connect -> createPage -> open -> login x${i} -> parse -> disconnect`.cyan)
   }
