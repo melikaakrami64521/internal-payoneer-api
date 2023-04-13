@@ -24,11 +24,11 @@ class Parser {
     this.findChromePath()
     this.browser = await pup.launch({
       executablePath: this.chromePath,
+      // args: ['--start-maximized', '--disable-blink-features=AutomationControlled', '--disable-infobars'],
       args: [
         '--start-maximized',
         '--disable-blink-features=AutomationControlled',
         '--disable-infobars',
-
         // '--no-sandbox',
         // '--disable-extension',
         // '--window-position=0,0',
@@ -38,7 +38,7 @@ class Parser {
       ],
       headless: false,
       ignoreDefaultArgs: ['--enable-automation'],
-      //   userDataDir: './.pup',
+      userDataDir: './.pup',
       devtools: true,
       ignoreHTTPSErrors: true,
       defaultViewport: { width: 1920, height: 1080 },
@@ -166,6 +166,10 @@ class Parser {
     }
   }
 
+  dataInJSON() {
+    fs.writeFileSync('data.json', JSON.stringify(this.data, null, 2), { encoding: 'utf-8' })
+  }
+
   async testing() {
     await this.connect()
     console.log(`PROCESS: connect`.cyan)
@@ -186,6 +190,7 @@ class Parser {
       await this.parse()
     }
 
+    this.dataInJSON()
     console.log(this.data)
 
     await this.sleep(10)
